@@ -1,0 +1,20 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.log
+
+# Virtual env
+.venv/
+venv/
+
+# OS/Editor
+.DS_Store
+.vscode/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Test cache
+.pytest_cache/
