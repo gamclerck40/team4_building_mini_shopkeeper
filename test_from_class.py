@@ -1,5 +1,6 @@
 import streamlit as st
 import pandas as pd
+from ledger import models
 
 # # -----------------------------
 # # 0) 페이지 설정 (선택이지만 추천)
@@ -77,6 +78,7 @@ import pandas as pd
 #     st.bar_chart(mood_count.set_index("감정"))
 
 list = []
+transaction = []
 date = st.date_input('날짜를 입력하시오.')
 st.write(list)
 
@@ -87,14 +89,13 @@ if type =="수입":
     category = st.selectbox('카테고리',["식사","교통","통신","생활","기타"])
 else:
     category = st.selectbox('카테고리',["월급","투자","대출","장학금"])
+
 description = st.text_input("부가 설명.")
-amount = st.number_input("금액 입력")
+amount = int(st.number_input("금액 입력", min_value=0, value=0, step=10))
 deploy = st.button("입력")
 
 if deploy:
-    list.append([date.year, date.month, date.day])
-    list.append(type)
-    list.append(category)
-    list.append(description)
-    list.append(amount)
-    st.write(list)
+    trans = models.Transaction([date.year, date.month, date.day],type,description,category,amount)
+    st.write(trans.amount)
+
+    
