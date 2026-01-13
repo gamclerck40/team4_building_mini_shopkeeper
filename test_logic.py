@@ -44,6 +44,7 @@
 import streamlit as st
 import pandas as pd
 from datetime import datetime
+from ledger import models
 
 # F4: load data
 # if it's the first time the program runs:
@@ -53,6 +54,8 @@ from datetime import datetime
 #     else:
 #         create an empty list[]
 #     save 'data_list' in st.session_state
+
+models.init_data()
 
 with st.sidebar:
     st.header("내역 추가")
@@ -78,28 +81,42 @@ with st.sidebar:
             "amount": amount
         }
         
-        st.session_state['data_list'].append(new_data)
+        # st.session_state['data_list'].append(new_data)
+        models.add_transaction(new_data)
         st.success("저장되었습니다")
-        
+
         
 
-# 여기부터는 검색어 받기, 데이터 거르기(D2)
-st.title("가계부 내역 검색")
+# 여기부터는 검색어 받기, 데이터 거르기 (D2)
+st.title("내역 검색")
 
 keyword = st.text_input("내용 검색", placeholder="검색어를 입력하세요")
 
+all_data = models.get_all_transaction()
 
-all_data = st.session_state["data_list"]
+if keyword: # 완성한 내용
+    filtered_result = [
+        d for d in all_data
+        if keyword.lower() in d['description'].lower()
+    ]
+else:
+    filtered_result = all_data
 
-if keyword:
-    filtered_result = [] # 아직 여기는 진행 안함
-    
-    
-    
-# F2
+# st.session_state['filtered_data'] = filtered_result
+models.save_filtered_data(filtered_result)  
+
+
+
+# F2 목록 출력
 
 if len(filtered_result) > 0:
     df = pd.DataFrame(filtered_result)
     
     if keyword:
         st.caption(f"검색 결과: {len(filtered_result)}건")
+    st.dataframe(df, use_container_width=True, hide_index=True)
+else:
+    if keyword:
+        st.info("검색 결과가 없습니다.")
+    else:
+        st.info("데이터가 없습니다.")
