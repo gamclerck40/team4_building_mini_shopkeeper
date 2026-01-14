@@ -15,6 +15,7 @@ def save_to_csv(transactions, path="data", filename="ledger.csv"):
     if not os.path.exists(path):
         os.makedirs(path)
 
+    #이렇게 선언 함으로써 "data/ledger.csv" 로 묶어서 사용 가능함.
     file_path = os.path.join(path, filename)
 
     # 파일이 없으면 헤더만 있는 CSV 생성
@@ -31,17 +32,29 @@ def save_to_csv(transactions, path="data", filename="ledger.csv"):
     
 
 
-def load_from_csv(path="data",filename = "ledger.csv"):
-    file_path = os.path.join(path,filename)
+def load_from_csv(path="data", filename="ledger.csv"):
+    # "data/ledger.csv"
+    file_path = os.path.join(path, filename)
 
-    if os.path.exists(file_path):
-        df = pd.read_csv(file_path, encoding="utf-8-sig")
-        return df
-    
-def is_empty_csv(path="data",filename = "ledger.csv"):
-    file_path = os.path.join(path,filename)
+    # CSV가 없으면 생성
     if not os.path.exists(file_path):
-        return True
-    df = pd.read_csv(file_path)
-    return df.empty
+        os.makedirs(path, exist_ok=True)
+
+        # 컬럼만 있는 빈 DataFrame 생성
+        df = pd.DataFrame(
+            columns=["date", "type", "category", "description", "amount"]
+        )
+        df.to_csv(file_path, index=False, encoding="utf-8-sig")
+        return df   # ✅ 반드시 DataFrame 반환
+
+    # CSV가 있으면 읽어서 반환
+    df = pd.read_csv(file_path, encoding="utf-8-sig")
+    return df
+    
+# def is_empty_csv(path="data",filename = "ledger.csv"):
+#     file_path = os.path.join(path,filename)
+#     if not os.path.exists(file_path):
+#         return True
+#     df = pd.read_csv(file_path)
+#     return df.empty
 
