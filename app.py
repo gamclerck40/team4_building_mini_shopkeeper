@@ -80,6 +80,7 @@ from datetime import datetime
 from ledger import models as md
 from ledger import services as sv
 from ledger import repository as rv 
+from ledger import utils as ut
 # 함수 선언부
 
 #start, end 값을 받기 위해 함수로 정의.
@@ -91,51 +92,51 @@ import streamlit as st
 st.set_page_config(page_title="4조의 가계부", page_icon="🍤", layout="wide")
 st.title("4조 미니 가계부 PROJECT")
 
-def duration_ui():
-    DEFAULT_START = date(2024, 1, 1)
-    DEFAULT_END   = date(2026, 12, 31)
+# def duration_ui():
+#     DEFAULT_START = date(2024, 1, 1)
+#     DEFAULT_END   = date(2026, 12, 31)
 
-    # 1️⃣ 기본값 준비
-    start_date = DEFAULT_START
-    end_date = DEFAULT_END
+#     # 1️⃣ 기본값 준비
+#     start_date = DEFAULT_START
+#     end_date = DEFAULT_END
 
-    # 2️⃣ CSV가 "존재"하고 "크기"가 있을 때
-    if os.path.exists(dir_name) and os.path.getsize(dir_name) > 0:
-        gf = load_data
+#     # 2️⃣ CSV가 "존재"하고 "크기"가 있을 때
+#     if os.path.exists(dir_name) and os.path.getsize(dir_name) > 0:
+#         gf = load_data
 
-        # 날짜 컬럼 안전 변환
-        gf["date"] = pd.to_datetime(gf["date"], errors="coerce")
+#         # 날짜 컬럼 안전 변환
+#         gf["date"] = pd.to_datetime(gf["date"], errors="coerce")
 
-        # 🚨 실제 날짜 데이터가 하나라도 있을 때만 min/max 사용
-        if not gf.empty and gf["date"].notna().any():
-            start_date = gf["date"].min().date()
-            end_date   = gf["date"].max().date()
+#         # 🚨 실제 날짜 데이터가 하나라도 있을 때만 min/max 사용
+#         if not gf.empty and gf["date"].notna().any():
+#             start_date = gf["date"].min().date()
+#             end_date   = gf["date"].max().date()
 
-    # 3️⃣ date_input (여기엔 절대 NaT / None 안 들어감)
-    date_value = st.date_input(
-        "기간 선택",
-        value=(start_date, end_date)
-    )
+#     # 3️⃣ date_input (여기엔 절대 NaT / None 안 들어감)
+#     date_value = st.date_input(
+#         "기간 선택",
+#         value=(start_date, end_date)
+#     )
 
-    # ==================================================
-    # 4️⃣ 반드시 정규화 (tuple / 단일값 대응)
-    # ==================================================
+#     # ==================================================
+#     # 4️⃣ 반드시 정규화 (tuple / 단일값 대응)
+#     # ==================================================
 
-    # (date, date) 형태
-    if isinstance(date_value, tuple):
+#     # (date, date) 형태
+#     if isinstance(date_value, tuple):
 
-        # 정상적인 기간 선택
-        if len(date_value) == 2:
-            return date_value
+#         # 정상적인 기간 선택
+#         if len(date_value) == 2:
+#             return date_value
 
-        # (date,) 형태 (이론상 거의 없지만 방어)
-        else:
-            st.warning("시작 날짜와 종료 날짜를 모두 선택해 주세요.")
-            return date_value[0], date_value[0]
+#         # (date,) 형태 (이론상 거의 없지만 방어)
+#         else:
+#             st.warning("시작 날짜와 종료 날짜를 모두 선택해 주세요.")
+#             return date_value[0], date_value[0]
 
-    # 단일 date 선택 시
-    else:
-        return date_value, date_value
+#     # 단일 date 선택 시
+#     else:
+#         return date_value, date_value
 # 변수 선언부 --------------------------------------------------
 # dataframe함수의 columns_config에 지정할 조건 데이터를 전역변수로 저장 (자주 사용함)
 columns_list = {"date":st.column_config.DateColumn(
@@ -159,7 +160,7 @@ load_data = rv.load_from_csv()
 md.engage_session_state_data_list()
 
 #기간 필터 검색 시작, 끝 날짜 정의 + UI 생성
-start, end = duration_ui()
+start, end = ut.duration_ui()
 
 #읽어온 CSV(DataFrame) 데이터를 받아서 날짜 필터링 조건을 적용하여 리턴.
 def set_duration(df, start_date, end_date):
@@ -308,6 +309,7 @@ with tab_outline:
     #Streamlit UI 구현부.
     if not load_data.empty:
         st.header(f"📊 요약 통계 : {start} ~ {end}")
+        st.subheader(f"{keyword}에 대한 통계")
         col_income, col_expense, col_balance = st.columns(3)
         # 각 컬럼에 핵심 지표를 카드 형태로 출력
         col_income.metric("총 수입", f"{summary['income']:,} 원")
