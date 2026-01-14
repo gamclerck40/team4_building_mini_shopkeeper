@@ -2,29 +2,43 @@ import streamlit as st
 import pandas as pd
 from ledger import models as md 
 
+# ▶ 비즈니스 로직 (계산/처리)
+# - 카테고리별 "지출" 통계 그래프
 def expenditure_statistics_graph(client_data):
-    if st.session_state['data_list'] and not client_data[client_data["type"]=="지출"].empty:
-        client_data_spending = client_data[client_data["type"]=="지출"]
-        categorized_data = client_data_spending[["category","amount"]]
-        st.bar_chart(categorized_data.set_index("category")["amount"])
-
+    spending_df = client_data[client_data["type"]=="지출"]
+    if spending_df.empty:
+        return pd.DataFrame(columns=["category", "amount"])
+    categorized_data = (
+        spending_df.groupby("category", as_index=False)["amount"]
+        .sum()
+        .sort_values("amount", ascending=False)
+    )
+    return categorized_data
+    # if st.session_state['data_list'] and not client_data[client_data["type"]=="지출"].empty:
+    #     client_data_spending = client_data[client_data["type"]=="지출"]
+    #     categorized_data = client_data_spending[["category","amount"]]
+    #     return categorized_data
+    
 # ▶ 비즈니스 로직 (계산/처리)
 # - 총 수입, 총 지출, 잔액을 계산하는 핵심 함수
-def calculate_summary(transactions):
-    total_income_amount = 0   # 전체 수입 합계
-    total_expense_amount = 0  # 전체 지출 합계
+def calculate_summary(df):
+    """
+    CSV에서 불러온 DataFrame 기준으로 수입/지출 합계와 잔액 계산
+    df: pd.DataFrame
+    """
+    if df.empty:
+        return {"income": 0, "expense": 0, "balance": 0}
 
-    for transaction in transactions:
-        # 거래 유형에 따라 수입/지출을 각각 누적
-        if transaction["type"] == "수입":
-            total_income_amount += transaction["amount"]
-        elif transaction["type"] == "지출":
-            total_expense_amount += transaction["amount"]
+    # 수입 합계
+    total_income_amount = df.loc[df["type"] == "수입", "amount"].sum()
 
-    # 잔액 = 총 수입 - 총 지출
+    # 지출 합계
+    total_expense_amount = df.loc[df["type"] == "지출", "amount"].sum()
+
+    # 잔액
     remaining_balance = total_income_amount - total_expense_amount
 
-    return {    
+    return {
         "income": total_income_amount,
         "expense": total_expense_amount,
         "balance": remaining_balance

@@ -1,15 +1,47 @@
 import csv
-FIELDS = ["date", "type", "category", "amount", "description"]
+import pandas as pd
+import os
+FIELDS = ["date", "type", "category", "description", "amount"]
 
-def save_to_csv(transactions, filename="ledger.csv"):
-    if not transactions:
-        return
+def save_to_csv(transactions, path="data", filename="ledger.csv"):
+    """
+    CSV에 단일 거래 기록을 append
+    줄바꿈 문제 없이 세션 초기 입력도 바로 반영됨
+    """
+    if transactions is None:
+        return  # 입력 없으면 종료
 
-    with open(filename, "w", newline="", encoding="utf-8-sig") as f:
-        writer = csv.DictWriter(f, fieldnames=FIELDS)
-        writer.writeheader()
-        writer.writerows(transactions)
+    # 저장 폴더 생성
+    if not os.path.exists(path):
+        os.makedirs(path)
 
-def initalization_to_csv(df):
-    df.iloc[0:0].to_csv("ledger.csv", index=False)
+    file_path = os.path.join(path, filename)
+
+    # 파일이 없으면 헤더만 있는 CSV 생성
+    if not os.path.exists(file_path):
+        empty_csv = pd.DataFrame(columns=FIELDS)
+        empty_csv.to_csv(file_path, index=False, encoding="utf-8-sig")
+
+    # 단일 거래를 DataFrame으로 변환
+    df = pd.DataFrame([transactions])
+
+    # CSV에 append (줄바꿈 문제 해결)
+    with open(file_path, mode="a", newline="", encoding="utf-8-sig") as f:
+        df.to_csv(f, header=False, index=False)
+    
+
+
+def load_from_csv(path="data",filename = "ledger.csv"):
+    file_path = os.path.join(path,filename)
+
+    if os.path.exists(file_path):
+        df = pd.read_csv(file_path, encoding="utf-8-sig")
+        return df
+    
+def is_empty_csv(path="data",filename = "ledger.csv"):
+    file_path = os.path.join(path,filename)
+    if not os.path.exists(file_path):
+        return True
+    df = pd.read_csv(file_path)
+    return df.empty
 
